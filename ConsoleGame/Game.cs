@@ -8,12 +8,13 @@ namespace ConsoleGame
 {
     class Game
     {
-#region Карта
+        #region Карта
         readonly char[][] levelInit = {
             "###################################".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
+            "#               o                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
@@ -22,8 +23,7 @@ namespace ConsoleGame
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#h                                #".ToCharArray(),
+            "#h                               s#".ToCharArray(),
             "#################################e#".ToCharArray(),
         };
         
@@ -49,13 +49,13 @@ namespace ConsoleGame
         const char spearMapChar = '3';
         const char saberMapChar = '4';
 
-#endregion
-
+        #endregion
 
         int rowCount = 15;
         int columnCount = 35;
         bool isGameACtive = true;
         char[,] levelData;
+        Random rand;
 
         public Game()
         {
@@ -69,6 +69,7 @@ namespace ConsoleGame
 
         void Initialize()
         {
+            rand = new Random();
             Console.CursorVisible = false;
             levelData = new char[rowCount, columnCount];
             for (int row = 0; row < rowCount; row++)
@@ -77,10 +78,27 @@ namespace ConsoleGame
                 {
                     char symbol = levelInit[row][column];
                     levelData[row, column] = symbol;
-                    if (symbol == heroMapSymbol)
+
+                    switch (symbol)
                     {
-                        heroRow = row;
-                        heroColumn = column;
+                        case heroMapSymbol:
+                            heroRow = row;
+                            heroColumn = column;
+                            heroHealth = heroBaseHealth;
+                            break;
+                        case orgMapSymbol:
+                            orgRow = row;
+                            orgColumn = column;
+                            orgHealath = orgBaseHealth;
+                            break;
+
+                        case skeletonMapSymbol:
+                            skeletonRow = row;
+                            skeletonColumn = column;
+                            skeletonHealth = skeletonBaseHealth;
+                            break;
+                        default:
+                            break;
                     }
                 }
             }
@@ -122,6 +140,55 @@ namespace ConsoleGame
                         MoveHero(heroRow - 1, heroColumn);
                         break;
                 }
+                UpdateUI();
+            }
+        }
+
+        void UpdateUI()
+        {
+            int moveOrg = rand.Next(4);
+
+            switch (moveOrg)
+            {
+                // Move left
+                case 0:
+                    MoveOrg(orgRow, orgColumn - 1);
+                    break;
+                // Move right
+                case 1:
+                    MoveOrg(orgRow, orgColumn + 1);
+                    break;
+                //move up
+                case 2:
+                    MoveOrg(orgRow - 1, orgColumn);
+                    break;
+                // Move down
+                case 3:
+                    MoveOrg(orgRow + 1, orgColumn);
+                    break;
+            }
+
+
+            int moveSkeleton = rand.Next(4);
+
+            switch (moveSkeleton)
+            {
+                // Move left
+                case 0:
+                    MoveSkeleton(skeletonRow, skeletonColumn - 1);
+                    break;
+                // Move right
+                case 1:
+                    MoveSkeleton(skeletonRow, skeletonColumn + 1);
+                    break;
+                //move up
+                case 2:
+                    MoveSkeleton(skeletonRow - 1, skeletonColumn);
+                    break;
+                // Move down
+                case 3:
+                    MoveSkeleton(skeletonRow + 1, skeletonColumn);
+                    break;
             }
         }
 
@@ -149,11 +216,71 @@ namespace ConsoleGame
             }
         }
 
+        void MoveOrg(int row, int column)
+        {
+            bool canMove = false;
+            char nextCell = levelData[row, column];
 
-#region Данные игрока
+            switch (nextCell)
+            {
+                case emptySymbol:
+                    canMove = true;
+                    break;
+            }
+
+            if (canMove)
+            {
+                levelData[orgRow, orgColumn] = emptySymbol;
+                levelData[row, column] = orgMapSymbol;
+                orgRow = row;
+                orgColumn = column;
+            }
+        }
+
+        void MoveSkeleton(int row, int column)
+        {
+            bool canMove = false;
+            char nextCell = levelData[row, column];
+
+            switch (nextCell)
+            {
+                case emptySymbol:
+                    canMove = true;
+                    break;
+            }
+
+            if (canMove)
+            {
+                levelData[skeletonRow, skeletonColumn] = emptySymbol;
+                levelData[row, column] = skeletonMapSymbol;
+                skeletonRow = row;
+                skeletonColumn = column;
+            }
+        }
+
+        #region Данные игрока
+        const int heroBaseHealth = 400;
         int heroRow = 0;
         int heroColumn = 0;
-#endregion
+        int heroHealth = 0;
+
+        #endregion
+
+
+        #region Данные монстров
+
+        const int orgBaseHealth = 60;
+        const int skeletonBaseHealth = 80;
+
+        int orgRow = 0;
+        int orgColumn = 0;
+        int orgHealath = 0;
+
+        int skeletonRow = 0;
+        int skeletonColumn = 0;
+        int skeletonHealth = 0;
+
+        #endregion
 
         #region вспомоглательные функции рендера
 
@@ -244,6 +371,6 @@ namespace ConsoleGame
             return Color;
         }
 
-#endregion
+        #endregion
     }
 }
