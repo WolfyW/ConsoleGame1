@@ -10,7 +10,7 @@ namespace ConsoleGame
     {
         static void Main(string[] args)
         {
-
+            Game game = new Game();
             Console.Read();
         }
     }
