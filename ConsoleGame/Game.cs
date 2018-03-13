@@ -199,7 +199,6 @@ namespace ConsoleGame
         {
             bool canMove = false;
             char nextCell = levelData[row, column];
-            char unitSymbol = unit.symbol;
 
             switch (nextCell)
             {
@@ -209,7 +208,7 @@ namespace ConsoleGame
                 case heroMapSymbol:
                 case orgMapSymbol:
                 case skeletonMapSymbol:
-                    UnitType destinationType = GetUnitType(nextCell);
+                    UnitType destinationType = Unit.GetUnitType(nextCell);
                     // Своих не атакуем
                     if (destinationType != unit.Type)
                     {
@@ -223,11 +222,8 @@ namespace ConsoleGame
                             // нашли
                             if (unitsData[u].row == row && unitsData[u].column == column)
                             {
-                                // находим урон
-                                int damage = GetWeaponDamage(unit.weapon);
-
                                 //атакуем
-                                unitsData[u].health -= damage;
+                                unitsData[u].health -= unit.weapon.Damage;
 
                                 // Если враг умер надо его убрать с клетки
                                 if (unitsData[u].health <= 0)
@@ -237,7 +233,6 @@ namespace ConsoleGame
                                 // for break
                                 break;
                             }
-
                         }
                     }
                     // switch break
@@ -255,9 +250,10 @@ namespace ConsoleGame
                     case spearMapChar:
                     case saberMapChar:
                         canMove = true;
-                        WeaponType weapon = GetWeaponTypeFromCell(nextCell);
-                        if (unit.weapon < weapon)
-                            unit.weapon = weapon;
+                        WeaponType weapon = Weapon.GetWeaponTypeFromCell(nextCell);
+                        if (unit.weapon.Type < weapon)
+                            unit.weapon = new Weapon(weapon);
+                            //unit.weapon.Type = weapon; // ПРОБЛЕМА!
                         break;
                     case exitMapSymbol:
                         isGameACtive = false;
@@ -273,68 +269,6 @@ namespace ConsoleGame
                 unit.column = column;
             }
         }
-
-        #region Получаем значения
-
-        int GetUnitDefaultHealth(char unit)
-        {
-            switch (unit)
-            {
-                case heroMapSymbol: return heroBaseHealth;
-                case orgMapSymbol: return orgBaseHealth;
-                case skeletonMapSymbol: return skeletonBaseHealth;
-                default: return 0;
-            }
-        }
-
-        UnitType GetUnitType(char unit)
-        {
-            switch (unit)
-            {
-                case heroMapSymbol: return UnitType.Hero;
-                case orgMapSymbol: return UnitType.Org;
-                case skeletonMapSymbol: return UnitType.Skeleton;
-                default: return UnitType.None;
-            }
-        }
-
-        WeaponType GetUnitWeapon(char unit)
-        {
-            switch (unit)
-            {
-                case heroMapSymbol: return WeaponType.Fist;
-                case orgMapSymbol: return WeaponType.Club;
-                case skeletonMapSymbol: return WeaponType.Saber;
-                default: return WeaponType.None;
-            }
-        }
-
-        WeaponType GetWeaponTypeFromCell(char cell)
-        {
-            switch (cell)
-            {
-                case stickMapChar: return WeaponType.Stick;
-                case clubMapChar: return WeaponType.Club;
-                case spearMapChar: return WeaponType.Spear;
-                case saberMapChar: return WeaponType.Saber;
-                default: return WeaponType.None;
-            }
-        }
-
-        int GetWeaponDamage(WeaponType weapon)
-        {
-            switch (weapon)
-            {
-                case WeaponType.Fist: return 2;
-                case WeaponType.Stick: return 16;
-                case WeaponType.Club:  return 24;
-                case WeaponType.Spear: return 32;
-                case WeaponType.Saber: return 40;
-            }
-            return 0;
-        }
-
-        #endregion
 
         #region вспомоглательные функции рендера
 
