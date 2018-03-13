@@ -8,9 +8,20 @@ namespace ConsoleGame
 {
     enum UnitType
     {
+        None,
         Org,
         Skeleton,
         Hero
+    }
+
+    enum WeaponType
+    {
+        None,
+        First,
+        Stick,
+        Club,
+        Spear,
+        Saber
     }
 
     class Unit
@@ -20,5 +31,6 @@ namespace ConsoleGame
         public int row;
         public int column;
         public int health;
+        public WeaponType weapon;
     }
 }

@@ -11,19 +11,19 @@ namespace ConsoleGame
         #region Карта
         readonly char[][] levelInit = {
             "###################################".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#     o                 s         #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#               o                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#                      o          #".ToCharArray(),
-            "#          s                      #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#               o                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#h                               s#".ToCharArray(),
+            "#     2 #                   #   o #".ToCharArray(),
+            "#     o #               s   # #   #".ToCharArray(),
+            "#  ######              ###  # #o###".ToCharArray(),
+            "#         o     o      #    # #   #".ToCharArray(),
+            "#############          #  ### ### #".ToCharArray(),
+            "#        o    s       ###     # o #".ToCharArray(),
+            "#           #        ##s####### ###".ToCharArray(),
+            "#  ###############   #s4       s  #".ToCharArray(),
+            "#  #3  o     #o      ##s######### #".ToCharArray(),
+            "#  #######   #  o#    ###       # #".ToCharArray(),
+            "#        # o   ###              # #".ToCharArray(),
+            "######## #######1#      o       # #".ToCharArray(),
+            "#h               #              #s#".ToCharArray(),
             "#################################e#".ToCharArray(),
         };
         
@@ -45,7 +45,7 @@ namespace ConsoleGame
         const char skeletonMapSymbol = 's';
         const char wallMapSymbol = '#';
         const char stickMapChar = '1';
-        const char clubMapChar = '2';
+        const char clubMapChar  = '2';
         const char spearMapChar = '3';
         const char saberMapChar = '4';
 
@@ -117,7 +117,8 @@ namespace ConsoleGame
                             Type = GetUnitType(symbol),
                             row = row,
                             column = column,
-                            health = GetUnitDefaultHealth(symbol)
+                            health = GetUnitDefaultHealth(symbol),
+                            weapon = GetUnitWeapon(symbol)
                         };
                         unitCounts++;
                     }
@@ -169,9 +170,15 @@ namespace ConsoleGame
         {
             for (int i = 0; i < unitCounts; i++)
             {
+                // Если это игрок, то перходим к следующему
                 if (unitsData[i].Type == UnitType.Hero)
                     continue;
 
+                // Игнорируем мертвых юнитов
+                if (unitsData[i].health <= 0)
+                    continue;
+
+                // Получаем случайное направление
                 int move = rand.Next(4);
 
                 switch (move)
@@ -208,12 +215,59 @@ namespace ConsoleGame
                 case emptySymbol:
                     canMove = true;
                     break;
+                case heroMapSymbol:
+                case orgMapSymbol:
+                case skeletonMapSymbol:
+                    UnitType destinationType = GetUnitType(nextCell);
+                    // Своих не атакуем
+                    if (destinationType != unit.Type)
+                    {
+                        // Ищем кого надо атаковать
+                        for (int u = 0; u < unitCounts; u++)
+                        {
+                            // игнорируем уже мртвых
+                            if (unitsData[u].health <= 0)
+                                continue;
+
+                            // нашли
+                            if (unitsData[u].row == row && unitsData[u].column == column)
+                            {
+                                // находим урон
+                                int damage = GetWeaponDamage(unit.weapon);
+
+                                //атакуем
+                                unitsData[u].health -= damage;
+
+                                // Если враг умер надо его убрать с клетки
+                                if (unitsData[u].health <= 0)
+                                {
+                                    levelData[row, column] = emptySymbol;
+                                }
+                                // for break
+                                break;
+                            }
+
+                        }
+                    }
+                    // switch break
+                    break;
+
             }
 
-            if (unitSymbol == heroMapSymbol)
+            if (unit.Type == UnitType.Hero)
             {
+                // Нашли выход
                 switch (nextCell)
                 {
+                    case stickMapChar:
+                    case clubMapChar:
+                    case spearMapChar:
+                    case saberMapChar:
+                        canMove = true;
+                        WeaponType weapon = GetWeaponTypeFromCell(nextCell);
+                        if (unit.weapon < weapon)
+                            unit.weapon = weapon;
+                        break;
                     case exitMapSymbol:
                         isGameACtive = false;
                         break;
@@ -229,41 +283,67 @@ namespace ConsoleGame
             }
         }
 
+        #region Получаем значения
+
         int GetUnitDefaultHealth(char unit)
         {
-            int health = 0;
             switch (unit)
             {
-                case heroMapSymbol:
-                    health = heroBaseHealth;
-                    break;
-                case orgMapSymbol:
-                    health = orgBaseHealth;
-                    break;
-                case skeletonMapSymbol:
-                    health = skeletonBaseHealth;
-                    break;
+                case heroMapSymbol: return heroBaseHealth;
+                case orgMapSymbol: return orgBaseHealth;
+                case skeletonMapSymbol: return skeletonBaseHealth;
+                default: return 0;
             }
-            return health;
         }
 
         UnitType GetUnitType(char unit)
         {
-            UnitType type = UnitType.Hero;
             switch (unit)
             {
-                case heroMapSymbol:
-                    type = UnitType.Hero;
-                    break;
-                case orgMapSymbol:
-                    type = UnitType.Org;
-                    break;
-                case skeletonMapSymbol:
-                    type = UnitType.Skeleton;
-                    break;
+                case heroMapSymbol: return UnitType.Hero;
+                case orgMapSymbol: return UnitType.Org;
+                case skeletonMapSymbol: return UnitType.Skeleton;
+                default: return UnitType.None;
             }
-            return type;
         }
+
+        WeaponType GetUnitWeapon(char unit)
+        {
+            switch (unit)
+            {
+                case heroMapSymbol: return WeaponType.First;
+                case orgMapSymbol: return WeaponType.Club;
+                case skeletonMapSymbol: return WeaponType.Saber;
+                default: return WeaponType.None;
+            }
+        }
+
+        WeaponType GetWeaponTypeFromCell(char cell)
+        {
+            switch (cell)
+            {
+                case stickMapChar: return WeaponType.Stick;
+                case clubMapChar: return WeaponType.Club;
+                case spearMapChar: return WeaponType.Spear;
+                case saberMapChar: return WeaponType.Saber;
+                default: return WeaponType.None;
+            }
+        }
+
+        int GetWeaponDamage(WeaponType weapon)
+        {
+            switch (weapon)
+            {
+                case WeaponType.First: return 2;
+                case WeaponType.Stick: return 16;
+                case WeaponType.Club:  return 24;
+                case WeaponType.Spear: return 32;
+                case WeaponType.Saber: return 40;
+            }
+            return 0;
+        }
+
+        #endregion
 
         #region вспомоглательные функции рендера
 
