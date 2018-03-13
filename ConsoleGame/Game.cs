@@ -12,15 +12,15 @@ namespace ConsoleGame
         readonly char[][] levelInit = {
             "###################################".ToCharArray(),
             "#                                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
+            "#     o                 s         #".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#               o                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
+            "#                      o          #".ToCharArray(),
+            "#          s                      #".ToCharArray(),
             "#                                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
-            "#                                 #".ToCharArray(),
+            "#               o                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#h                               s#".ToCharArray(),
@@ -53,9 +53,26 @@ namespace ConsoleGame
 
         int rowCount = 15;
         int columnCount = 35;
+        int maxCountUnit = 35;
+        int unitCounts = 0;
         bool isGameACtive = true;
         char[,] levelData;
         Random rand;
+
+        #region Данные монстров
+
+        const int heroBaseHealth = 400;
+        const int orgBaseHealth = 60;
+        const int skeletonBaseHealth = 80;
+
+        int[] unitsData;
+        int[] rowUnit;
+        int[] columnUnit;
+        int[] healthUnit;
+
+        int heroIndex = 0;
+
+        #endregion
 
         public Game()
         {
@@ -71,6 +88,12 @@ namespace ConsoleGame
         {
             rand = new Random();
             Console.CursorVisible = false;
+
+            unitsData = new int[maxCountUnit];
+            rowUnit = new int[maxCountUnit];
+            columnUnit = new int[maxCountUnit];
+            healthUnit = new int[maxCountUnit];
+
             levelData = new char[rowCount, columnCount];
             for (int row = 0; row < rowCount; row++)
             {
@@ -82,22 +105,21 @@ namespace ConsoleGame
                     switch (symbol)
                     {
                         case heroMapSymbol:
-                            heroRow = row;
-                            heroColumn = column;
-                            heroHealth = heroBaseHealth;
-                            break;
-                        case orgMapSymbol:
-                            orgRow = row;
-                            orgColumn = column;
-                            orgHealath = orgBaseHealth;
+                            heroIndex = unitCounts;
+                            unitsData[unitCounts] = unitCounts;
+                            rowUnit[unitCounts] = row;
+                            columnUnit[unitCounts] = column;
+                            healthUnit[unitCounts] = GetUnitDefaultHealth(symbol);
+                            unitCounts++;
                             break;
 
+                        case orgMapSymbol:
                         case skeletonMapSymbol:
-                            skeletonRow = row;
-                            skeletonColumn = column;
-                            skeletonHealth = skeletonBaseHealth;
-                            break;
-                        default:
+                            unitsData[unitCounts] = unitCounts;
+                            rowUnit[unitCounts] = row;
+                            columnUnit[unitCounts] = column;
+                            healthUnit[unitCounts] = GetUnitDefaultHealth(symbol);
+                            unitCounts++;
                             break;
                     }
                 }
@@ -128,16 +150,16 @@ namespace ConsoleGame
                 switch (key.Key)
                 {
                     case ConsoleKey.A:
-                        MoveHero(heroRow, heroColumn - 1);
+                        MoveUnit(heroIndex, rowUnit[heroIndex], columnUnit[heroIndex] - 1);
                         break;
                     case ConsoleKey.D:
-                        MoveHero(heroRow, heroColumn + 1);
+                        MoveUnit(heroIndex, rowUnit[heroIndex], columnUnit[heroIndex] + 1);
                         break;
                     case ConsoleKey.S:
-                        MoveHero(heroRow + 1, heroColumn);
+                        MoveUnit(heroIndex, rowUnit[heroIndex] + 1, columnUnit[heroIndex]);
                         break;
                     case ConsoleKey.W:
-                        MoveHero(heroRow - 1, heroColumn);
+                        MoveUnit(heroIndex, rowUnit[heroIndex] - 1, columnUnit[heroIndex]);
                         break;
                 }
                 UpdateUI();
@@ -146,80 +168,41 @@ namespace ConsoleGame
 
         void UpdateUI()
         {
-            int moveOrg = rand.Next(4);
-
-            switch (moveOrg)
+            for (int i = 0; i < unitCounts; i++)
             {
-                // Move left
-                case 0:
-                    MoveOrg(orgRow, orgColumn - 1);
-                    break;
-                // Move right
-                case 1:
-                    MoveOrg(orgRow, orgColumn + 1);
-                    break;
-                //move up
-                case 2:
-                    MoveOrg(orgRow - 1, orgColumn);
-                    break;
-                // Move down
-                case 3:
-                    MoveOrg(orgRow + 1, orgColumn);
-                    break;
-            }
+                if (i == heroIndex)
+                    continue;
 
+                int move = rand.Next(4);
 
-            int moveSkeleton = rand.Next(4);
+                switch (move)
+                {
+                    // Move left
+                    case 0:
+                        MoveUnit(i, rowUnit[i], columnUnit[i] - 1);
+                        break;
+                    // Move right
+                    case 1:
+                        MoveUnit(i, rowUnit[i], columnUnit[i] + 1);
+                        break;
+                    //move up
+                    case 2:
+                        MoveUnit(i, rowUnit[i] - 1, columnUnit[i]);
+                        break;
+                    // Move down
+                    case 3:
+                        MoveUnit(i, rowUnit[i] + 1, columnUnit[i]);
+                        break;
+                }
 
-            switch (moveSkeleton)
-            {
-                // Move left
-                case 0:
-                    MoveSkeleton(skeletonRow, skeletonColumn - 1);
-                    break;
-                // Move right
-                case 1:
-                    MoveSkeleton(skeletonRow, skeletonColumn + 1);
-                    break;
-                //move up
-                case 2:
-                    MoveSkeleton(skeletonRow - 1, skeletonColumn);
-                    break;
-                // Move down
-                case 3:
-                    MoveSkeleton(skeletonRow + 1, skeletonColumn);
-                    break;
             }
         }
 
-        void MoveHero(int row, int column)
+        void MoveUnit(int unitIndex, int row, int column)
         {
             bool canMove = false;
             char nextCell = levelData[row, column];
-
-            switch (nextCell)
-            {
-                case emptySymbol:
-                    canMove = true;
-                    break;
-                case exitMapSymbol:
-                    isGameACtive = false;
-                    break;
-            }
-
-            if (canMove)
-            {
-                levelData[heroRow, heroColumn] = emptySymbol;
-                levelData[row, column] = heroMapSymbol;
-                heroRow = row;
-                heroColumn = column;
-            }
-        }
-
-        void MoveOrg(int row, int column)
-        {
-            bool canMove = false;
-            char nextCell = levelData[row, column];
+            char unitSymbol = levelData[rowUnit[unitIndex], columnUnit[unitIndex]];
 
             switch (nextCell)
             {
@@ -228,59 +211,42 @@ namespace ConsoleGame
                     break;
             }
 
+            if (unitSymbol == heroMapSymbol)
+            {
+                switch (nextCell)
+                {
+                    case exitMapSymbol:
+                        isGameACtive = false;
+                        break;
+                }
+            }
+
             if (canMove)
             {
-                levelData[orgRow, orgColumn] = emptySymbol;
-                levelData[row, column] = orgMapSymbol;
-                orgRow = row;
-                orgColumn = column;
+                levelData[rowUnit[unitIndex], columnUnit[unitIndex]] = emptySymbol;
+                levelData[row, column] = unitSymbol;
+                rowUnit[unitIndex] = row;
+                columnUnit[unitIndex] = column;
             }
         }
 
-        void MoveSkeleton(int row, int column)
+        int GetUnitDefaultHealth(char unit)
         {
-            bool canMove = false;
-            char nextCell = levelData[row, column];
-
-            switch (nextCell)
+            int health = 0;
+            switch (unit)
             {
-                case emptySymbol:
-                    canMove = true;
+                case heroMapSymbol:
+                    health = heroBaseHealth;
+                    break;
+                case orgMapSymbol:
+                    health = orgBaseHealth;
+                    break;
+                case skeletonMapSymbol:
+                    health = skeletonBaseHealth;
                     break;
             }
-
-            if (canMove)
-            {
-                levelData[skeletonRow, skeletonColumn] = emptySymbol;
-                levelData[row, column] = skeletonMapSymbol;
-                skeletonRow = row;
-                skeletonColumn = column;
-            }
+            return health;
         }
-
-        #region Данные игрока
-        const int heroBaseHealth = 400;
-        int heroRow = 0;
-        int heroColumn = 0;
-        int heroHealth = 0;
-
-        #endregion
-
-
-        #region Данные монстров
-
-        const int orgBaseHealth = 60;
-        const int skeletonBaseHealth = 80;
-
-        int orgRow = 0;
-        int orgColumn = 0;
-        int orgHealath = 0;
-
-        int skeletonRow = 0;
-        int skeletonColumn = 0;
-        int skeletonHealth = 0;
-
-        #endregion
 
         #region вспомоглательные функции рендера
 
