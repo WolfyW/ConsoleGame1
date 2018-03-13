@@ -30,7 +30,6 @@ namespace ConsoleGame
         readonly char heroSymbol = EncodingChar(2);
         readonly char wallSymbol = EncodingChar(177);
         readonly char exitSymbol = EncodingChar(176);
-
         readonly char skeletonSymbol = EncodingChar(2);
         readonly char orgSymbol = EncodingChar(2);
         readonly char stickChar = EncodingChar(47);
@@ -38,16 +37,16 @@ namespace ConsoleGame
         readonly char spearChar = EncodingChar(24);
         readonly char saberChar = EncodingChar(108);
 
-        const char emptySymbol = ' ';
-        const char exitMapSymbol = 'e';
-        const char heroMapSymbol = 'h';
-        const char orgMapSymbol = 'o';
-        const char skeletonMapSymbol = 's';
-        const char wallMapSymbol = '#';
-        const char stickMapChar = '1';
-        const char clubMapChar  = '2';
-        const char spearMapChar = '3';
-        const char saberMapChar = '4';
+        public const char emptySymbol = ' ';
+        public const char exitMapSymbol = 'e';
+        public const char heroMapSymbol = 'h';
+        public const char orgMapSymbol = 'o';
+        public const char skeletonMapSymbol = 's';
+        public const char wallMapSymbol = '#';
+        public const char stickMapChar = '1';
+        public const char clubMapChar  = '2';
+        public const char spearMapChar = '3';
+        public const char saberMapChar = '4';
 
         #endregion
 
@@ -111,15 +110,7 @@ namespace ConsoleGame
 
                     if (isUnit)
                     {
-                        unitsData[unitCounts] = new Unit()
-                        {
-                            symbol = symbol,
-                            Type = GetUnitType(symbol),
-                            row = row,
-                            column = column,
-                            health = GetUnitDefaultHealth(symbol),
-                            weapon = GetUnitWeapon(symbol)
-                        };
+                        unitsData[unitCounts] = new Unit(symbol, row, column);
                         unitCounts++;
                     }
                 }
@@ -311,7 +302,7 @@ namespace ConsoleGame
         {
             switch (unit)
             {
-                case heroMapSymbol: return WeaponType.First;
+                case heroMapSymbol: return WeaponType.Fist;
                 case orgMapSymbol: return WeaponType.Club;
                 case skeletonMapSymbol: return WeaponType.Saber;
                 default: return WeaponType.None;
@@ -334,7 +325,7 @@ namespace ConsoleGame
         {
             switch (weapon)
             {
-                case WeaponType.First: return 2;
+                case WeaponType.Fist: return 2;
                 case WeaponType.Stick: return 16;
                 case WeaponType.Club:  return 24;
                 case WeaponType.Spear: return 32;
