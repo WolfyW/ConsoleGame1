@@ -38,6 +38,7 @@ namespace ConsoleGame
         readonly char spearChar = EncodingChar(24);
         readonly char saberChar = EncodingChar(108);
 
+        const char emptySymbol = ' ';
         const char exitMapSymbol = 'e';
         const char heroMapSymbol = 'h';
         const char orgMapSymbol = 'o';
@@ -48,7 +49,7 @@ namespace ConsoleGame
         const char spearMapChar = '3';
         const char saberMapChar = '4';
 
-        #endregion
+#endregion
 
 
         int rowCount = 15;
@@ -68,6 +69,7 @@ namespace ConsoleGame
 
         void Initialize()
         {
+            Console.CursorVisible = false;
             levelData = new char[rowCount, columnCount];
             for (int row = 0; row < rowCount; row++)
             {
@@ -75,6 +77,11 @@ namespace ConsoleGame
                 {
                     char symbol = levelInit[row][column];
                     levelData[row, column] = symbol;
+                    if (symbol == heroMapSymbol)
+                    {
+                        heroRow = row;
+                        heroColumn = column;
+                    }
                 }
             }
         }
@@ -97,9 +104,58 @@ namespace ConsoleGame
 
         void Update()
         {
-
+            if (Console.KeyAvailable)
+            {
+                ConsoleKeyInfo key = Console.ReadKey(true);
+                switch (key.Key)
+                {
+                    case ConsoleKey.A:
+                        MoveHero(heroRow, heroColumn - 1);
+                        break;
+                    case ConsoleKey.D:
+                        MoveHero(heroRow, heroColumn + 1);
+                        break;
+                    case ConsoleKey.S:
+                        MoveHero(heroRow + 1, heroColumn);
+                        break;
+                    case ConsoleKey.W:
+                        MoveHero(heroRow - 1, heroColumn);
+                        break;
+                }
+            }
         }
-#region вспомоглательные функции рендера
+
+        void MoveHero(int row, int column)
+        {
+            bool canMove = false;
+            char nextCell = levelData[row, column];
+
+            switch (nextCell)
+            {
+                case emptySymbol:
+                    canMove = true;
+                    break;
+                case exitMapSymbol:
+                    isGameACtive = false;
+                    break;
+            }
+
+            if (canMove)
+            {
+                levelData[heroRow, heroColumn] = emptySymbol;
+                levelData[row, column] = heroMapSymbol;
+                heroRow = row;
+                heroColumn = column;
+            }
+        }
+
+
+#region Данные игрока
+        int heroRow = 0;
+        int heroColumn = 0;
+#endregion
+
+        #region вспомоглательные функции рендера
 
         static char EncodingChar(byte numberSym)
         {
