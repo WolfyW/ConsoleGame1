@@ -65,10 +65,7 @@ namespace ConsoleGame
         const int orgBaseHealth = 60;
         const int skeletonBaseHealth = 80;
 
-        int[] unitsData;
-        int[] rowUnit;
-        int[] columnUnit;
-        int[] healthUnit;
+        Unit[] unitsData;
 
         int heroIndex = 0;
 
@@ -89,10 +86,7 @@ namespace ConsoleGame
             rand = new Random();
             Console.CursorVisible = false;
 
-            unitsData = new int[maxCountUnit];
-            rowUnit = new int[maxCountUnit];
-            columnUnit = new int[maxCountUnit];
-            healthUnit = new int[maxCountUnit];
+            unitsData = new Unit[maxCountUnit];
 
             levelData = new char[rowCount, columnCount];
             for (int row = 0; row < rowCount; row++)
@@ -101,26 +95,31 @@ namespace ConsoleGame
                 {
                     char symbol = levelInit[row][column];
                     levelData[row, column] = symbol;
+                    bool isUnit = false;
 
                     switch (symbol)
                     {
                         case heroMapSymbol:
                             heroIndex = unitCounts;
-                            unitsData[unitCounts] = unitCounts;
-                            rowUnit[unitCounts] = row;
-                            columnUnit[unitCounts] = column;
-                            healthUnit[unitCounts] = GetUnitDefaultHealth(symbol);
-                            unitCounts++;
+                            isUnit = true;
                             break;
-
                         case orgMapSymbol:
                         case skeletonMapSymbol:
-                            unitsData[unitCounts] = unitCounts;
-                            rowUnit[unitCounts] = row;
-                            columnUnit[unitCounts] = column;
-                            healthUnit[unitCounts] = GetUnitDefaultHealth(symbol);
-                            unitCounts++;
+                            isUnit = true;
                             break;
+                    }
+
+                    if (isUnit)
+                    {
+                        unitsData[unitCounts] = new Unit()
+                        {
+                            symbol = symbol,
+                            Type = GetUnitType(symbol),
+                            row = row,
+                            column = column,
+                            health = GetUnitDefaultHealth(symbol)
+                        };
+                        unitCounts++;
                     }
                 }
             }
@@ -150,16 +149,16 @@ namespace ConsoleGame
                 switch (key.Key)
                 {
                     case ConsoleKey.A:
-                        MoveUnit(heroIndex, rowUnit[heroIndex], columnUnit[heroIndex] - 1);
+                        MoveUnit(unitsData[heroIndex], unitsData[heroIndex].row, unitsData[heroIndex].column - 1);
                         break;
                     case ConsoleKey.D:
-                        MoveUnit(heroIndex, rowUnit[heroIndex], columnUnit[heroIndex] + 1);
+                        MoveUnit(unitsData[heroIndex], unitsData[heroIndex].row, unitsData[heroIndex].column + 1);
                         break;
                     case ConsoleKey.S:
-                        MoveUnit(heroIndex, rowUnit[heroIndex] + 1, columnUnit[heroIndex]);
+                        MoveUnit(unitsData[heroIndex], unitsData[heroIndex].row + 1, unitsData[heroIndex].column);
                         break;
                     case ConsoleKey.W:
-                        MoveUnit(heroIndex, rowUnit[heroIndex] - 1, columnUnit[heroIndex]);
+                        MoveUnit(unitsData[heroIndex], unitsData[heroIndex].row - 1, unitsData[heroIndex].column);
                         break;
                 }
                 UpdateUI();
@@ -170,7 +169,7 @@ namespace ConsoleGame
         {
             for (int i = 0; i < unitCounts; i++)
             {
-                if (i == heroIndex)
+                if (unitsData[i].Type == UnitType.Hero)
                     continue;
 
                 int move = rand.Next(4);
@@ -179,30 +178,30 @@ namespace ConsoleGame
                 {
                     // Move left
                     case 0:
-                        MoveUnit(i, rowUnit[i], columnUnit[i] - 1);
+                        MoveUnit(unitsData[i], unitsData[i].row, unitsData[i].column - 1);
                         break;
                     // Move right
                     case 1:
-                        MoveUnit(i, rowUnit[i], columnUnit[i] + 1);
+                        MoveUnit(unitsData[i], unitsData[i].row, unitsData[i].column + 1);
                         break;
                     //move up
                     case 2:
-                        MoveUnit(i, rowUnit[i] - 1, columnUnit[i]);
+                        MoveUnit(unitsData[i], unitsData[i].row - 1, unitsData[i].column);
                         break;
                     // Move down
                     case 3:
-                        MoveUnit(i, rowUnit[i] + 1, columnUnit[i]);
+                        MoveUnit(unitsData[i], unitsData[i].row + 1, unitsData[i].column);
                         break;
                 }
 
             }
         }
 
-        void MoveUnit(int unitIndex, int row, int column)
+        void MoveUnit(Unit unit, int row, int column)
         {
             bool canMove = false;
             char nextCell = levelData[row, column];
-            char unitSymbol = levelData[rowUnit[unitIndex], columnUnit[unitIndex]];
+            char unitSymbol = unit.symbol;
 
             switch (nextCell)
             {
@@ -223,10 +222,10 @@ namespace ConsoleGame
 
             if (canMove)
             {
-                levelData[rowUnit[unitIndex], columnUnit[unitIndex]] = emptySymbol;
-                levelData[row, column] = unitSymbol;
-                rowUnit[unitIndex] = row;
-                columnUnit[unitIndex] = column;
+                levelData[unit.row, unit.column] = emptySymbol;
+                levelData[row, column] = unit.symbol;
+                unit.row = row;
+                unit.column = column;
             }
         }
 
@@ -246,6 +245,24 @@ namespace ConsoleGame
                     break;
             }
             return health;
+        }
+
+        UnitType GetUnitType(char unit)
+        {
+            UnitType type = UnitType.Hero;
+            switch (unit)
+            {
+                case heroMapSymbol:
+                    type = UnitType.Hero;
+                    break;
+                case orgMapSymbol:
+                    type = UnitType.Org;
+                    break;
+                case skeletonMapSymbol:
+                    type = UnitType.Skeleton;
+                    break;
+            }
+            return type;
         }
 
         #region вспомоглательные функции рендера
