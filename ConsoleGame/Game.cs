@@ -8,7 +8,7 @@ namespace ConsoleGame
 {
     class Game
     {
-        readonly char[][] levelData = {
+        readonly char[][] levelInit = {
             "###################################".ToCharArray(),
             "#                                 #".ToCharArray(),
             "#                                 #".ToCharArray(),
@@ -29,6 +29,8 @@ namespace ConsoleGame
         int rowCount = 15;
         int columnCount = 35;
         bool isGameACtive = true;
+        char[][] LevelData;
+
         public Game()
         {
             Initialize();
